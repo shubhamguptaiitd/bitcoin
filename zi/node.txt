@@ -1,0 +1,49 @@
+from queue import Queue
+import TRANSACTION as tt
+import BLOCKCHAIN as bb
+import threading
+import time
+import Crypto
+
+#global nodes    #list of all nodes that will be spawned
+nodes=[]
+#Queue=[]
+class Node(threading.Thread):
+    pvt_key=0; public_key=0; nodes_temp=[]
+    def __init__(self, blk, pvk, pbk, i):
+        threading.Thread.__init__(self)
+        self.chain=[]
+        self.chain.append(blk)      #first block=> genesis block added
+        self.pvt_key=pvk
+        self.public_key=pbk
+        self.nodes_temp=[]
+        #self.q= Queue[i]
+        self.Queue=[]
+
+    def run(self):
+        print("starting thrd ", self.getName())
+        nodes[1].Queue.append("MSG from %s"+ self.getName())
+        time.sleep(0.5)
+        self.called()
+
+    def called(self):
+        print("Queue of ",self.getName(), " ", self.Queue)
+        #print("Pub and pvt keys", self.public_key, self.pvt_key)
+        print(self.chain, " " , self.getName())
+    #def add_msg(self):
+
+if __name__ == '__main__':
+    print("hii")
+
+    t=tt.transaction(gen='genesis')
+    #print(t.hasht)
+    b=bb.blockchain(gt=t)
+    print(b)
+
+    a=222;b1=333
+    for i in range(3):
+        t= Node(b,a+i,b1+i,i)
+        nodes.append(t)
+
+    for i in range(3):
+        nodes[i].start()
