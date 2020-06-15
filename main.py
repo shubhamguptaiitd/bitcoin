@@ -6,7 +6,6 @@ import time
 import sys
 
 
-
 class Message():
     def __init__(self,type,src,dst): 
         self.type = type  ##### Add to block, 
