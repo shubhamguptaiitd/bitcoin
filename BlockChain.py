@@ -8,14 +8,12 @@ class Block():
         self.previous_block_hash = previous_block_hash
         self.narry = narry
         self.transactions = transactions
-        self.merkle_tree = create_merkle_tree(self.transactions,self.narry) #### given the list of transactions, create their hashes and get the
+        self.merkle_tree = create_merkle_tree([item.txid for item in self.transactions],self.narry) #### given the list of transactions, create their hashes and get the
         self.merkle_tree_root = self.merkle_tree[-1][0]
         self.index = index
         self.pow_number_of_zeros = proof_of_work_zeros
         print("computing proof of work")
         self.compute_proof_of_work()
-        self.magic_number = None
-        self.version = None ### It specifies the 
         self.transactions_count = len(self.transactions)
         self.block_reward = None
         self.fee_reward = None
