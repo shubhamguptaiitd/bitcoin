@@ -1,27 +1,47 @@
-
 from multiprocessing import Process, Queue,Pool
 import threading
 import queue as Q
 import time
 import sys
-
-
-class Message():
-    def __init__(self,type,src,dst): 
-        self.type = type  ##### Add to block, 
-        self.src = src 
-        self.dst = dst
-
-    def __str__(self):
-        return self.type + ":" + str(self.src) + "->" + str(self.dst) 
-
-
-
-
-class BitNode():
+from Message import Message
+from Transactions import Transaction,Input,Output
+from BlockChain import Block
+from crypto_functions import generate_public_private_keys
+from MerkleTree import generate_hash
+def count_leading_zero_string(string):
+    return len(string) - len(string.lstrip('0'))
+class Node():   ### This node can function as both worker and mining node!!!
     def __init__(self,id,N,debug=False):
         self.id = id
         self.N = N
+        ### Create a private and public key
+        self.private_key,self.public_key = generate_public_private_keys()
+        self.btc = 0 #### bitcoins it has
+        self.blockChain = None
+        self.transactions_collected = []   #### unspent transactions (it stores the ids of unspent transactions)
+        self.proof_of_work_zeros = 6
+        
+    def is_proof_of_work_correct(self,block):
+        string = generate_hash(block.merkle_tree_root + block.previous_block_hash + block.nounce)
+        return count_leading_zero_string(string) == self.proof_of_work_zeros
+    
+    def verify_transaction(transaction):
+        for row in transaction.tx_in:
+            if row.prev_output_tid not in self.blockChain.utxo:
+                return False
+        return transaction.verify_sign_transaction()
+    
+    def verify_transactions(self,block):
+        for transaction in block.transactions:
+            if not verify_transaction(transaction):
+                return False
+        return True
+    
+    def add_block(self,Block block):
+        if proof_of_work_correct(block):
+            if transactions_verified(block):
+                ### code to add to block chain
+        
     def main(self,msg_qs,outputq):
         done = False
 

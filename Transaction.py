@@ -1,6 +1,5 @@
 from crypto_functions import generate_hash,generate_public_private_keys,key_in_RSA_object,sign_data,verify_sign
 
-from crypto_functions import generate_hash,generate_public_private_keys,key_in_RSA_object,sign_data,verify_sign
 
 class Transaction():
     def __init__(self,sender_address,inputs,outputs,private_key):
