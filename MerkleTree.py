@@ -1,6 +1,6 @@
 from crypto_functions import generate_hash
 
-def create_merkle_tree(list_of_items,narry=2):  ##  its a list of list of hashes
+def create_merkle_tree(list_of_items,narry=2,hash_type='SHA256'):  ##  its a list of list of hashes
     leaves= list_of_items
     if len(leaves) % narry > 0:
         leaves = leaves + [leaves[-1]]*(narry-len(leaves) % narry)
@@ -12,7 +12,7 @@ def create_merkle_tree(list_of_items,narry=2):  ##  its a list of list of hashes
         slices = [hashes_at_each_level[i][index*narry:(index+1)*narry] for index in range(0, int(len_current_level/narry))]
         next_level_hashes = []
         for item in slices:
-            next_level_hashes.append(generate_hash("".join(item)))
+            next_level_hashes.append(generate_hash("".join(item),type=hash_type))
         if len(next_level_hashes) > 1 and len(next_level_hashes) % narry > 0:
             next_level_hashes = next_level_hashes + [next_level_hashes[-1]]*(narry-len(next_level_hashes) % narry)
         hashes_at_each_level.append(next_level_hashes)
@@ -22,7 +22,7 @@ def create_merkle_tree(list_of_items,narry=2):  ##  its a list of list of hashes
         #print(len_current_level)
     return hashes_at_each_level
 
-def verify_transaction_given_merkle_tree_and_merkle_root(merkle_root_hash,merkle_tree,transaction,narry=2):
+def verify_transaction_given_merkle_tree_and_merkle_root(merkle_root_hash,merkle_tree,transaction,narry=2,hash_type='SHA256'):
     if transaction not in merkle_tree[0]:
         return False
     leaves= merkle_tree[0]
@@ -37,7 +37,7 @@ def verify_transaction_given_merkle_tree_and_merkle_root(merkle_root_hash,merkle
         slices = [hashes_at_each_level[i][index*narry:(index+1)*narry] for index in range(0, int(len_current_level/narry))]
         next_level_hashes = []
         for item in slices:
-            next_level_hashes.append(generate_hash("".join(item)))
+            next_level_hashes.append(generate_hash("".join(item),type=hash_type))
         if len(next_level_hashes) > 1 and len(next_level_hashes) % narry > 0:
             next_level_hashes = next_level_hashes + [next_level_hashes[-1]]*(narry-len(next_level_hashes) % narry)
         hashes_at_each_level.append(next_level_hashes)

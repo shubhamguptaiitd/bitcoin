@@ -6,11 +6,11 @@ def count_leading_zero_string(string):
     return len(string) - len(string.lstrip('0'))
 class Block():
     
-    def __init__(self,proof_of_work_zeros,index,narry,transactions,previous_block_hash):
+    def __init__(self,proof_of_work_zeros,index,narry,transactions,previous_block_hash,hash_type='SHA256'):
         self.previous_block_hash = previous_block_hash
         self.narry = narry
         self.transactions = transactions
-        self.merkle_tree = create_merkle_tree([item.txid for item in self.transactions],self.narry) #### given the list of transactions, create their hashes and get the
+        self.merkle_tree = create_merkle_tree([item.txid for item in self.transactions],self.narry,hash_type) #### given the list of transactions, create their hashes and get the merkle tree
         self.merkle_tree_root = self.merkle_tree[-1][0]
         self.index = index
         self.pow_number_of_zeros = proof_of_work_zeros
@@ -19,12 +19,13 @@ class Block():
         self.transactions_count = len(self.transactions)
         self.block_reward = None
         self.fee_reward = None
+        self.hash_type = hash_type
     def compute_proof_of_work(self):
         self.block_hash = ''
         self.nounce = 0
         while count_leading_zero_string(self.block_hash) != self.pow_number_of_zeros:
             string = self.merkle_tree_root + self.previous_block_hash + str(self.nounce)
-            self.block_hash = generate_hash(string)
+            self.block_hash = generate_hash(string,type=self.hash_type)
             self.nounce += 1
             if self.nounce%1000000 == 0:
                 print("done nounce,", self.nounce)
@@ -32,19 +33,20 @@ class Block():
         
         
 class BlockChain():
-    def __init__(self,narry,proof_of_work_zeros):
+    def __init__(self,narry,proof_of_work_zeros,hash_type):
         self.proof_of_work_zeros = proof_of_work_zeros
         self.narry= narry
+        self.hash_type = hash_type
         self.blockchain = []
-        self.blockchain.append(self.genesis_block())
-    def genesis_block(self,t_genesis):
-        return Block(self.proof_of_work_zeros,0,self.narry,[t_genesis],'0')
-        
+        #self.blockchain.append(self.genesis_block())
+    def add_genesis_block(self,t_genesis):
+        return self.blockchain.append(Block(self.proof_of_work_zeros,0,self.narry,t_genesis,'0',self.hash_type))
     def add_block(block):
+        self.blockchain.append(block) 
         #### added block must be verified at node level then it can be added to the blockchain
         #### Add the code in blockchain if verified #####
         
         ### if block is referencing to a last chain then it can be added otherwise , duplicate the whole chain till last reference and keep from there.  If there is consensus of long chains the remove all other forked chains!!!
-        self.blockchain.append(block)  #### also need to see if block is referencing to previous member of block, forking will happen
+         #### also need to see if block is referencing to previous member of block, forking will happen
         
         
