@@ -9,10 +9,18 @@ class Transaction():
         self.tx_out_ct = len(outputs)
         self.tx_out = outputs
         self.sender_address = sender_address.hex()  ### sender_address/publickey in bytes
-        self.sign = self.sign_transaction(key_in_RSA_object(private_key)) ### private_key is byte
-        self.txid = generate_hash(str(self),type=hash_type)
         self.time = str(int(time.time()))
         self.hash_type = hash_type
+        self.sign = self.sign_transaction(key_in_RSA_object(private_key)) ### private_key is byte
+        self.txid = generate_hash(self.string_of_transaction(),type=hash_type)
+    def string_of_transaction(self):
+        rep = self.time + str(self.tx_in_ct) + str(self.tx_out_ct) +"--"
+        for tx in self.tx_in:
+            rep+= str(tx)
+        for tx in self.tx_out:
+            rep+= str(tx)
+        rep += self.sender_address
+        return rep
     def __str__(self):
         rep = "Transaction:[ \n"
         for key, value in vars(self).items():
@@ -29,9 +37,9 @@ class Transaction():
         return rep
 
     def sign_transaction(self,private_key):
-        return sign_data(str(self),private_key)
+        return sign_data(self.string_of_transaction(),private_key)
     def verify_sign_transaction(self):
-        return verify_sign(str(self),self.sign,key_in_RSA_object(bytes.fromhex(self.sender_address)))
+        return verify_sign(self.string_of_transaction(),self.sign,key_in_RSA_object(bytes.fromhex(self.sender_address)))
         
         
 class Input():

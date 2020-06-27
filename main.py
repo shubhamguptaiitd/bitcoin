@@ -19,21 +19,40 @@ class Node():   ### This node can function as both worker and mining node!!!
         self.narry = narry
         self.proof_of_work_zeros = prowk
         self.hash_type = hash_type
+        self.block_reward = 10
+        self.transaction_fee = 1
+        self.block_creation_time = 10
         ### Create a private and public key
         self.public_key,self.private_key = generate_public_private_keys()
+        self.public_key_hash = generate_hash(self.public_key.hex(),type = hash_type)
         self.btc = 0 #### bitcoins it has
-        self.blockChain = None
+        self.blockchain = None
         self.transactions_collected = []   #### unspent transactions (it stores the ids of unspent transactions)
-        
-        
+        self.secured_unspent_btc = {} 
+        self.unspent_btc = []
+    def update_unspent_btc_from_blockchain(self,blockchain):
+        for block in blockchain.blockchain:
+            self.update_unspent_btc_from_block(block)
+            
+    def update_unspent_btc_from_block(self,block):
+        for tx in block.transactions:
+            txid = tx.txid
+            sender_address = bytes.fromhex(tx.sender_address)
+            for index,output in enumerate(tx.tx_out):
+                if output.to_address == self.public_key_hash:
+                    key = txid+"-"+str(index)
+                    if key not in self.secured_unspent_btc:
+                        print("{} Received {} BTC from {}".format(str(self.id),str(output.amount),self.node_id_of_public_key[sender_address]))
+                        self.secured_unspent_btc[key] = [sender_address,output.amount,txid,index]
+                    self.btc += output.amount
 
-        
     def main(self,msg_qs,outputq):
         done = False
         self.public_keys_of_nodes = [None]*self.N
         self.public_keys_of_nodes[self.id]  = self.public_key
-        self.received_transactions = []
-        self.received_blocks = []
+        self.node_id_of_public_key = {}
+        self.node_id_of_public_key[self.public_key] = self.id
+        self.transactions_not_in_blockchain = []
         
         #send each other the public  keys
         ct = 0
@@ -52,7 +71,6 @@ class Node():   ### This node can function as both worker and mining node!!!
                 print(" No message and wait for the public keys")
         if self.debug:
             print("Received public key with ct {} from every node to {}".format(str(ct),str(self.id)))
-        
             
         
         if self.id == 0: ## create a genesis block
@@ -60,7 +78,10 @@ class Node():   ### This node can function as both worker and mining node!!!
             outputs = []
             total_amount_generated = 0
             for i in range(0,self.N):
-                amount = random.choice(range(5,15))
+                
+                amount = random.choice(range(20,60))
+                if i ==0:
+                    amount += self.block_reward
                 total_amount_generated += amount
                 outputs.append(Output(self.public_keys_of_nodes[i].hex(),amount,self.hash_type))
             coinbase_t = Transaction(self.public_keys_of_nodes[self.id],inputs,outputs,self.private_key,t_type = 'COINBASE',hash_type=self.hash_type)
@@ -70,7 +91,8 @@ class Node():   ### This node can function as both worker and mining node!!!
                 if self.debug:
                     print("Sending everyone else the genesis block ", self.id)
                 msg_qs[i].put(Message("GENESIS_BLOCK",self.blockchain,self.id,i))
-        else:  ### everyone else will receive the genesis block and use it further for transaction
+            self.update_unspent_btc_from_blockchain(self.blockchain)
+        else:                                          ### everyone else will receive the genesis block and use it further for transaction
             received_genesis_block = False
             while not received_genesis_block:
                 try:
@@ -80,23 +102,49 @@ class Node():   ### This node can function as both worker and mining node!!!
                         received_genesis_block = True
 
                 except Q.Empty:
-                    print(" Waiting for genesis block," , self.id)
-                    
+                    print(" Waiting for genesis block," , self.id)    
             if self.debug:
-                print("Received genesis block, now need to verify it ", self.id)
+                print("Received genesis block, now need to verify it and update its own money ", self.id)
+                #msg.msg.blockchain[0].nounce = '223'
+            if self.verify_genesis_block(msg.msg):
                     
-                    
-                msg.msg.blockchain[0].nounce = '223'
-                if self.verify_genesis_block(msg.msg):
-                    
-                    print("verfied genesis block")
-                    self.blockchain = msg.msg
+                print("verfied genesis block")
+                ### identify people from whom you got money
+                #self.blockchain = msg.msg
+                self.update_unspent_btc_from_blockchain(self.blockchain)
                 
                 
-            
-            
+
+            #print(self.blockchain)
+        #print(self.secured_unspent_btc,self.btc,self.id)
+        # if self.id ==0:
+        #    print(self.blockchain)  
         #print("Done and return," , self.id)
         
+        ### Block for doing transaction ####
+        done = False
+        die_out_seconds = 30
+        timeout_seconds = 1
+        last_block_cor = time.time() ### time of last time block was created or received
+        waited_time = 0
+        while not done:
+            try:    
+                msg= msg_qs[self.id].get(block=True,timeout=timeout_seconds)   
+                waited_time = 0
+                if msg.type == "Transaction":
+                    store_it_
+            except Q.Empty:
+                waited_time += timeout_seconds
+                if waited_time > die_out_seconds:
+                    print("waited for message for more than ",die_out_seconds,"  seconds, seems none is using bitcoin, lets die")
+                    print("I had a amount of {} BTC".format(str(self.btc))
+        
+
+        
+        
+        ### Block for mining #####
+        # Now mining work starts
+        
                 
             
             
@@ -111,9 +159,7 @@ class Node():   ### This node can function as both worker and mining node!!!
             
             
             
-        ### Genesis block will contain the transfer of bitcoins to all the nodes, all the nodes will receive the genesis block and append it to their blockchain
         
-        ### Now node 0 will create a genesis block , this block will transfer the bitcoins to all the nodes, a random number between 0.1 BTC to 100000 BTC
         ### Now each node will select a random node and will send it money 
         ### Once it does send/receive then it wont send any money to any other node for 10 seconds
         ### Further each node will engange in mining the blocks, as soon it finishes, it will send the blocks to everyone and everyone will validate the block before adding it.
@@ -145,29 +191,31 @@ class Node():   ### This node can function as both worker and mining node!!!
         return count_leading_zero_string(string) == self.proof_of_work_zeros
     
     def verify_transaction(self,transaction):
-        if transaction.t_type=='COINBASE':
         for row in transaction.tx_in:
-            if row.prev_output_tid not in self.blockChain.utxo:
+            if row.prev_output_tid not in self.blockchain.utxo and transaction.t_type!='COINBASE':
                 return False
-        return transaction.verify_sign_transaction()
+        signaure_verified = transaction.verify_sign_transaction()
+        return signaure_verified
     
     def verify_transactions(self,block):
         for transaction in block.transactions:
-            if not verify_transaction(transaction):
+            if not self.verify_transaction(transaction):
                 return False
         return True
     
-    def add_block(self,block):
-        if proof_of_work_correct(block):
-            if transactions_verified(block):
-                print("added to block chain")
+#     def add_block(self,block):
+#         if proof_of_work_correct(block):
+#             if transactions_verified(block):
+#                 print("added to block chain")
     
     def update_public_key_of_node(self,nodeid,public_key):
         self.public_keys_of_nodes[nodeid] = public_key
+        self.node_id_of_public_key[public_key] = nodeid
+
     ### code to add to block chain
 
 if __name__== "__main__":
-    debug = True
+    debug = False
     number_of_nodes= int(sys.argv[1])
     narry = int(sys.argv[2])
     prowk = int(sys.argv[3])

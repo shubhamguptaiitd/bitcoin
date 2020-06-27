@@ -12,8 +12,7 @@ class Block():
         self.narry = narry
         self.index = index
         self.pow_number_of_zeros = proof_of_work_zeros
-        self.block_reward = None
-        self.fee_reward = None
+
         self.hash_type = hash_type
         self.transactions = transactions
         self.transactions_count = len(self.transactions)
@@ -54,6 +53,7 @@ class BlockChain():
         self.proof_of_work_zeros = proof_of_work_zeros
         self.narry= narry
         self.hash_type = hash_type
+        self.utxo = set() ### this will consist of unspent transactions in blockchain
         self.blockchain = []
         #print("Members of this block chain will need to compute {} proof of work zeros,".format(str(self.proof_of_work_zeros)))
         #self.blockchain.append(self.genesis_block())
@@ -72,28 +72,20 @@ class BlockChain():
             rep += "\n"
         rep += ']\n'
         return rep
+    def add_utxos(self,transactions):
+        for tx in transactions:
+            for index,output in enumerate(tx.tx_out):
+                item = tx.txid +"-" + str(index)
+                self.utxo.add(item)
+        return
     def add_genesis_block(self,t_genesis): 
         self.blockchain.append(Block(self.proof_of_work_zeros,0,self.narry,t_genesis,'0',self.hash_type,'Genesis'))
+        self.add_utxos(t_genesis)
     def add_block(block):
         self.blockchain.append(block)
+        self.add_utxos(block.transactions)
+    
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        #### added block must be verified at node level then it can be added to the blockchain
-        #### Add the code in blockchain if verified #####
-        
-        ### if block is referencing to a last chain then it can be added otherwise , duplicate the whole chain till last reference and keep from there.  If there is consensus of long chains the remove all other forked chains!!!
-         #### also need to see if block is referencing to previous member of block, forking will happen
-        
+
         
