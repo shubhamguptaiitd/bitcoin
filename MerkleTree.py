@@ -1,6 +1,6 @@
 from crypto_functions import generate_hash
 
-def create_merkle_tree(list_of_items,narry=2,hash_type='SHA256'):  ##  its a list of list of hashes
+def create_merkle_tree(list_of_items,narry,hash_type):  ##  its a list of list of hashes
     leaves= list_of_items
     if len(leaves) % narry > 0:
         leaves = leaves + [leaves[-1]]*(narry-len(leaves) % narry)
@@ -22,7 +22,7 @@ def create_merkle_tree(list_of_items,narry=2,hash_type='SHA256'):  ##  its a lis
         #print(len_current_level)
     return hashes_at_each_level
 
-def verify_transaction_given_merkle_tree_and_merkle_root(merkle_root_hash,merkle_tree,transaction,narry=2,hash_type='SHA256'):
+def verify_transaction_given_merkle_tree_and_merkle_root(merkle_root_hash,merkle_tree,transaction,narry,hash_type):
     if transaction not in merkle_tree[0]:
         return False
     leaves= merkle_tree[0]

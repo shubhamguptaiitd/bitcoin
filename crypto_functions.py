@@ -9,7 +9,7 @@ import Crypto
 # def generate_hash(string):
 #     return hashlib.sha256(string.encode()).hexdigest()
 
-def generate_hash(string,type='SHA256'):
+def generate_hash(string,type):
     if type not in ['SHA1','SHA224','SHA256','SHA384','SHA512']:
         print("unknown type of hash")
         return

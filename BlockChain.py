@@ -6,20 +6,37 @@ def count_leading_zero_string(string):
     return len(string) - len(string.lstrip('0'))
 class Block():
     
-    def __init__(self,proof_of_work_zeros,index,narry,transactions,previous_block_hash,hash_type='SHA256'):
+    def __init__(self,proof_of_work_zeros,index,narry,transactions,previous_block_hash,hash_type,block_type="Regular"):
+        self.block_type = block_type
         self.previous_block_hash = previous_block_hash
         self.narry = narry
-        self.transactions = transactions
-        self.merkle_tree = create_merkle_tree([item.txid for item in self.transactions],self.narry,hash_type) #### given the list of transactions, create their hashes and get the merkle tree
-        self.merkle_tree_root = self.merkle_tree[-1][0]
         self.index = index
         self.pow_number_of_zeros = proof_of_work_zeros
-        print("computing proof of work")
-        self.compute_proof_of_work()
-        self.transactions_count = len(self.transactions)
         self.block_reward = None
         self.fee_reward = None
         self.hash_type = hash_type
+        self.transactions = transactions
+        self.transactions_count = len(self.transactions)
+        self.merkle_tree = create_merkle_tree([item.txid for item in self.transactions],self.narry,hash_type) #### given the list of transactions, create their hashes and get the merkle tree
+        self.merkle_tree_root = self.merkle_tree[-1][0]
+
+        print("computing proof of work")
+        self.compute_proof_of_work()
+        print("computed")
+    def __str__(self):
+        rep = "Block: \n"
+        for key, value in vars(self).items():
+            if key not in ['merkle_tree']:
+                rep += key + " --> "
+                if type(value) is list:
+                    rep += "list: "
+                    for row in value:
+                        rep += str(row)
+                        rep += " , "
+                else:
+                    rep += str(value)
+                rep += "\n"
+        return rep
     def compute_proof_of_work(self):
         self.block_hash = ''
         self.nounce = 0
@@ -38,11 +55,41 @@ class BlockChain():
         self.narry= narry
         self.hash_type = hash_type
         self.blockchain = []
+        #print("Members of this block chain will need to compute {} proof of work zeros,".format(str(self.proof_of_work_zeros)))
         #self.blockchain.append(self.genesis_block())
-    def add_genesis_block(self,t_genesis):
-        return self.blockchain.append(Block(self.proof_of_work_zeros,0,self.narry,t_genesis,'0',self.hash_type))
+        
+    def __str__(self):
+        rep = "BlockChain: [\n"
+        for key, value in vars(self).items():
+            rep += key + " --> "
+            if type(value) is list:
+                rep += "list: \n"
+                for row in value:
+                    rep += str(row)
+                    rep += " , "
+            else:
+                rep += str(value)
+            rep += "\n"
+        rep += ']\n'
+        return rep
+    def add_genesis_block(self,t_genesis): 
+        self.blockchain.append(Block(self.proof_of_work_zeros,0,self.narry,t_genesis,'0',self.hash_type,'Genesis'))
     def add_block(block):
-        self.blockchain.append(block) 
+        self.blockchain.append(block)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         #### added block must be verified at node level then it can be added to the blockchain
         #### Add the code in blockchain if verified #####
         
