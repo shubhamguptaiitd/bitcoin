@@ -2,7 +2,7 @@ from crypto_functions import generate_hash,generate_public_private_keys,key_in_R
 import time
 
 class Transaction():
-    def __init__(self,sender_address,inputs,outputs,private_key,t_type,hash_type):
+    def __init__(self,sender_address,inputs,outputs,private_key,t_type,hash_type):   #### Since private key is not stored in class object, anyone who has this object will not be able to sign again the transaction since it wont have the private key
         self.t_type = t_type
         self.tx_in_ct = len(inputs)
         self.tx_in = inputs
@@ -38,7 +38,7 @@ class Transaction():
 
     def sign_transaction(self,private_key):
         return sign_data(self.string_of_transaction(),private_key)
-    def verify_sign_transaction(self):
+    def verify_sign_transaction(self):  ### since sign is made using private key, if it changes the data
         return verify_sign(self.string_of_transaction(),self.sign,key_in_RSA_object(bytes.fromhex(self.sender_address)))
         
         

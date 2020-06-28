@@ -11,6 +11,11 @@ from MerkleTree import generate_hash
 import random
 def count_leading_zero_string(string):
     return len(string) - len(string.lstrip('0'))
+def coin_toss(prob):
+    if random.uniform(0,1) <= prob:
+        return True
+    else:
+        return False
 class Node():   ### This node can function as both worker and mining node!!!
     def __init__(self,id,N,narry,prowk,hash_type,debug=False):
         self.id = id
@@ -115,31 +120,33 @@ class Node():   ### This node can function as both worker and mining node!!!
                 
                 
 
-            #print(self.blockchain)
-        #print(self.secured_unspent_btc,self.btc,self.id)
-        # if self.id ==0:
-        #    print(self.blockchain)  
-        #print("Done and return," , self.id)
-        
-        ### Block for doing transaction ####
         done = False
         die_out_seconds = 30
         timeout_seconds = 1
         last_block_cor = time.time() ### time of last time block was created or received
+        last_transaction_time = time.time()
         waited_time = 0
         while not done:
             try:    
                 msg= msg_qs[self.id].get(block=True,timeout=timeout_seconds)   
                 waited_time = 0
                 if msg.type == "Transaction":
-                    store_it_
+                    if msg.msg.verify_sign_transaction():
+                        self.transactions_collected.append(msg.msg)
+                    if msg.type == "Block":
+                        last_block_cor = time.time()
+                   # store_it_
             except Q.Empty:
                 waited_time += timeout_seconds
                 if waited_time > die_out_seconds:
-                    print("waited for message for more than ",die_out_seconds,"  seconds, seems none is using bitcoin, lets die")
-                    print("I had a amount of {} BTC".format(str(self.btc))
-        
-
+                    print("waited for transactions for more than ",die_out_seconds,"  seconds, seems none is using bitcoin, lets die")
+                    print("I {} had a amount of {} BTC".format(str(self.id),str(self.btc)))
+                else:  ## stuff to do , may be create a block or receive a block , send some poor guy a money   
+                    if time.time() - last_block_cor > self.block_creation_time:
+                        last_block_cor= time.time()
+                        if coin_toss(5*1.0/self.N):
+                            print("creating a block and send it everyone,", self.id)
+                            print("Before sending it to everyone do check someone has sent you already")
         
         
         ### Block for mining #####
@@ -157,6 +164,13 @@ class Node():   ### This node can function as both worker and mining node!!!
             
             
             
+            #print(self.blockchain)
+        #print(self.secured_unspent_btc,self.btc,self.id)
+        # if self.id ==0:
+        #    print(self.blockchain)  
+        #print("Done and return," , self.id)
+        
+        ### Block for doing transaction ####
             
             
         
