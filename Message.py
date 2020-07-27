@@ -8,3 +8,4 @@ class Message():
     def __str__(self):
         return self.type + ":" + str(self.msg)+ "--" + str(self.src) + "->" + str(self.dst) 
 
+

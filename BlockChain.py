@@ -12,7 +12,7 @@ class Block():
         self.narry = narry
         self.index = index
         self.pow_number_of_zeros = proof_of_work_zeros
-
+        self.block_creation_award = 2
         self.hash_type = hash_type
         self.transactions = transactions
         self.transactions_count = len(self.transactions)
@@ -21,7 +21,13 @@ class Block():
 
         print("computing proof of work")
         self.compute_proof_of_work()
+        self.award_amount,self.award_txid,self.award_index = self.append_block_creation_award()
         print("computed")
+#     def append_block_creation_award():
+#         in_btc = 0
+#         out_btc = 0
+#         for tx in self.transactions:
+#             for in_tx in tx.
     def __str__(self):
         rep = "Block: \n"
         for key, value in vars(self).items():
@@ -78,14 +84,27 @@ class BlockChain():
                 item = tx.txid +"-" + str(index)
                 self.utxo.add(item)
         return
+    def spent_utxos(self,transactions):
+        for tx in transactions:
+            for index,my_input in enumerate(tx.tx_in):
+                item = my_input.prev_output_tid+"-"+str(prev_output_index)
+                self.utxo.remove(item)
+                print("removed")
+        return 
     def add_genesis_block(self,t_genesis): 
         self.blockchain.append(Block(self.proof_of_work_zeros,0,self.narry,t_genesis,'0',self.hash_type,'Genesis'))
         self.add_utxos(t_genesis)
     def add_block(block):
         self.blockchain.append(block)
         self.add_utxos(block.transactions)
+        self.spent_utxos(block.transactions)
     
         
-        
+    def get_amount_for_txid_and_index(self,txid,index):
+        for block in self.blockchain:
+            if trans in bloc.transactions:
+                if txid == trans.txid:
+                    return trans.tx_out[index].amount
+        return None  ### Not found in blockchain
 
         
