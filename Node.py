@@ -213,6 +213,9 @@ class Node():   ### This node can function as both worker and mining node!!!
                                             print(self.id,"sending created block to ", i)
                                             msg_qs[i].put(Message("Block",new_block,self.id,i))
                                     miner.add_block(new_block)
+                                    
+                                    ### Once the block is added , increase the verified transaction list
+                                    ### 
                                     #print("Now left ",self.id,[t.txid for t in miner.transactions_collected])
                                     #self.transactions_collected = []
                                 #print("Before sending it to everyone do check if someone has sent you already")

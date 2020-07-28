@@ -27,7 +27,7 @@ class Miner():
         self.private_key= private_key
         self.public_keys_of_nodes = public_keys_of_nodes
         self.node_id_of_public_key = node_id_of_public_key
-
+        self.forked_chain = [] #### this will be used to maintain forked version Assumption 
         print("Initialized miner for node,", self.id)
         
     def verify_genesis_block(self):
