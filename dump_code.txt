@@ -51,37 +51,3 @@
             
             
         
-        ### Now each node will select a random node and will send it money 
-        ### Once it does send/receive then it wont send any money to any other node for 10 seconds
-        ### Further each node will engange in mining the blocks, as soon it finishes, it will send the blocks to everyone and everyone will validate the block before adding it.
-        ### Once they validate, 
-#         while not done:
-#             try:
-#                 msg = msg_qs[self.id].get(block=True,timeout=10)
-#                 if msg.type == "PUBLIC_KEY":
-#                     self.update_public_key_of_node(msg.src,msg.msg)
-#                 if msg.type == "TRANSACTION":
-#                     #### collect the transaction ###
-#                 if msg.type == "BLOCK":
-#                     ### add the block and verify it
-                    
-                
-#                 #print("Received message")
-#                 print("Received message  ," +str(msg))
-#                 ct += 1
-#             except Q.Empty:
-#                 print("No new message in 5 seconds , got messages from {} exitin {}".format(str(ct),str(self.id)))
-#                 #outputq.put("I am done {}".format(str(self.id)))
-#                 done = True
-#                 #return
-        
-    
-                if i == 0:
-                    amount += self.block_reward
-                total_amount_generated += amount
-                outputs.append(Output(self.public_keys_of_nodes[i].hex(),amount,self.hash_type))
-                            transaction = 
-                        print("Sending money to ")
-
-
-    ### code to add to block chain
