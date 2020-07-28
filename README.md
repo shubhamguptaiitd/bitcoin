@@ -9,3 +9,10 @@ python3.7 , anaconda contains all the required library
 
 Running Instructions - 
 
+python3 main.py 10 2 4 SHA256 3
+
+10 - number of nodes in system
+2 - narray
+4 - proof of work zeros
+SHA256 - hash type
+3 - min wait block time before confirmation
