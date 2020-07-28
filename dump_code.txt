@@ -76,54 +76,12 @@
 #                 #return
         
     
-    def create_block(self,blockchain):
-        in_btc = 0
-        out_btc = 0
-        block_creation_award = 2
-        for transact in self.transactions_collected:
-            for ins in transact.tx_in:
-                amount = blockchain.get_amount_for_txid_and_index(ins.prev_output_tid,ins.index)
-                if amount is None:
-                    return None ### means referenced input transactions dont exist in blockchain
-                in_btc += amount
-            for outs in transact.tx_out:
-                out_btc += outs.amount
-        total_reward = block_creation_award + out_btc - in_btc
-        inputs = [Input('None','None')]
-        outputs = [Output(self.public_keys_of_nodes[self.id].hex(),total_reward,self.hash_type)]
-        transaction = Transaction(self.public_keys_of_nodes[self.id],inputs,outputs,self.private_key,t_type = 'COINBASE',hash_type=self.hash_type)
-        self.transactions_collected = [transaction] + self.transactions_collected
-        block = Block(self.proof_of_work_zeros,len(blockchain.blockchain),self.narry,self.transactions_collected ,blockchain.blockchain[-1].block_hash,self.hash_type,block_type="Regular")
-        return block
-        ### now create a new transactions and put this money to self account
-        
-    def verify_block(block):
-        return self.is_proof_of_work_correct(block) and self.verify_transactions(block)
-    def verify_genesis_block(self,blockchain):
-        return self.is_proof_of_work_correct(blockchain.blockchain[0]) and self.verify_transactions(blockchain.blockchain[0])
-    def is_proof_of_work_correct(self,block):
-        string = generate_hash(block.merkle_tree_root + block.previous_block_hash + str(block.nounce),type=self.hash_type)
-        return count_leading_zero_string(string) == self.proof_of_work_zeros
-    
-    def verify_transaction(self,transaction):
-        for row in transaction.tx_in:
-            if row.prev_output_tid not in self.blockchain.utxo and transaction.t_type!='COINBASE':
-                return False
-
-        signaure_verified = transaction.verify_sign_transaction()
-        return signaure_verified
-    
-    def verify_transactions(self,block):
-        for transaction in block.transactions:
-            if not self.verify_transaction(transaction):
-                return False
-        return True
-    
-#     def add_block(self,block):
-#         if proof_of_work_correct(block):
-#             if transactions_verified(block):
-#                 print("added to block chain")
-    
+                if i == 0:
+                    amount += self.block_reward
+                total_amount_generated += amount
+                outputs.append(Output(self.public_keys_of_nodes[i].hex(),amount,self.hash_type))
+                            transaction = 
+                        print("Sending money to ")
 
 
     ### code to add to block chain

@@ -19,9 +19,9 @@ class Block():
         self.merkle_tree = create_merkle_tree([item.txid for item in self.transactions],self.narry,hash_type) #### given the list of transactions, create their hashes and get the merkle tree
         self.merkle_tree_root = self.merkle_tree[-1][0]
 
-        print("computing proof of work")
+        print("computing proof of work", self.pow_number_of_zeros)
         self.compute_proof_of_work()
-        self.award_amount,self.award_txid,self.award_index = self.append_block_creation_award()
+        #self.award_amount,self.award_txid,self.award_index = self.append_block_creation_award()
         print("computed")
 #     def append_block_creation_award():
 #         in_btc = 0
@@ -61,6 +61,9 @@ class BlockChain():
         self.hash_type = hash_type
         self.utxo = set() ### this will consist of unspent transactions in blockchain
         self.blockchain = []
+        self.forked_blocks = []
+        self.confirmed_block_index=None
+        self.current_block_height = None
         #print("Members of this block chain will need to compute {} proof of work zeros,".format(str(self.proof_of_work_zeros)))
         #self.blockchain.append(self.genesis_block())
         
@@ -87,22 +90,25 @@ class BlockChain():
     def spent_utxos(self,transactions):
         for tx in transactions:
             for index,my_input in enumerate(tx.tx_in):
-                item = my_input.prev_output_tid+"-"+str(prev_output_index)
+                item = my_input.prev_output_tid+"-"+str(my_input.prev_output_index)
                 self.utxo.remove(item)
-                print("removed")
+                #print("removed")
         return 
     def add_genesis_block(self,t_genesis): 
         self.blockchain.append(Block(self.proof_of_work_zeros,0,self.narry,t_genesis,'0',self.hash_type,'Genesis'))
         self.add_utxos(t_genesis)
+        self.confirmed_block_index = 0
+        self.current_block_height = 0 ### height start from 0
     def add_block(block):
+        #if 
         self.blockchain.append(block)
-        self.add_utxos(block.transactions)
-        self.spent_utxos(block.transactions)
+        #self.add_utxos(block.transactions)
+        #self.spent_utxos(block.transactions)
     
         
     def get_amount_for_txid_and_index(self,txid,index):
-        for block in self.blockchain:
-            if trans in bloc.transactions:
+        for block in self.blockchain[:self.confirmed_block_index+1]:
+            for trans in block.transactions:
                 if txid == trans.txid:
                     return trans.tx_out[index].amount
         return None  ### Not found in blockchain
