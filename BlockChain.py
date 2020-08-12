@@ -19,15 +19,10 @@ class Block():
         self.merkle_tree = create_merkle_tree([item.txid for item in self.transactions],self.narry,hash_type) #### given the list of transactions, create their hashes and get the merkle tree
         self.merkle_tree_root = self.merkle_tree[-1][0]
 
-        print("computing proof of work", self.pow_number_of_zeros)
+        #print(self.id, " computing proof of work", self.pow_number_of_zeros)
         self.compute_proof_of_work()
         #self.award_amount,self.award_txid,self.award_index = self.append_block_creation_award()
-        print("computed")
-#     def append_block_creation_award():
-#         in_btc = 0
-#         out_btc = 0
-#         for tx in self.transactions:
-#             for in_tx in tx.
+        #print("computed")
     def __str__(self):
         rep = "Block: \n"
         for key, value in vars(self).items():
@@ -90,8 +85,9 @@ class BlockChain():
     def spent_utxos(self,transactions):
         for tx in transactions:
             for index,my_input in enumerate(tx.tx_in):
-                item = my_input.prev_output_tid+"-"+str(my_input.prev_output_index)
-                self.utxo.remove(item)
+                if tx.t_type != "COINBASE":
+                    item = my_input.prev_output_tid+"-"+str(my_input.prev_output_index)
+                    self.utxo.remove(item)
                 #print("removed")
         return 
     def add_genesis_block(self,t_genesis): 
@@ -99,11 +95,7 @@ class BlockChain():
         self.add_utxos(t_genesis)
         self.confirmed_block_index = 0
         self.current_block_height = 0 ### height start from 0
-    def add_block(block):
-        #if 
-        self.blockchain.append(block)
-        #self.add_utxos(block.transactions)
-        #self.spent_utxos(block.transactions)
+    
     
         
     def get_amount_for_txid_and_index(self,txid,index):

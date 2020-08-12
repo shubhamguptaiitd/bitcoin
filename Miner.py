@@ -57,7 +57,7 @@ class Miner():
     def create_block(self):
         in_btc = 0
         out_btc = 0
-        block_creation_award = 1
+        #block_creation_award = 1
         if self.debug:
             print(self.id, "creating block of length ", len(self.transactions_collected))
         if len(self.transactions_collected) >= 1:
@@ -69,11 +69,10 @@ class Miner():
                     in_btc += amount
                 for outs in transact.tx_out:
                     out_btc += outs.amount
-            total_reward = block_creation_award + in_btc - out_btc
+            total_reward =self.block_creation_time + in_btc - out_btc
             inputs = [Input('None','None')]
             outputs = [Output(self.public_keys_of_nodes[self.id].hex(),total_reward,self.hash_type)]
             transaction = Transaction(self.public_keys_of_nodes[self.id],inputs,outputs,self.private_key,t_type = 'COINBASE',hash_type=self.hash_type)
-            #self.transactions_collected = [transaction] + self.transactions_collected
             block = Block(self.proof_of_work_zeros,len(self.blockchain.blockchain),self.narry,[transaction] + self.transactions_collected ,self.blockchain.blockchain[-1].block_hash,self.hash_type,block_type="Regular")
             return block
         else:
@@ -88,7 +87,9 @@ class Miner():
 #                print(self.id, block.previous_block_hash, self.blockchain.blockchain[-1].block_hash)
                 if block.previous_block_hash == self.blockchain.blockchain[-1].block_hash:
                     self.blockchain.blockchain.append(block)
-                    print(self.id," transaction already ,", len(self.transactions_collected))
+                    self.blockchain.current_block_height += 1
+                    if self.debug:
+                        print(self.id," transaction already ,", len(self.transactions_collected))
                     #print(self.id," already ", [t.txid for t in self.transactions_collected])
                     for trans in block.transactions:
                         index = [index  for index,transaction in enumerate(self.transactions_collected) if transaction.txid == trans.txid]
@@ -98,7 +99,17 @@ class Miner():
                         if len(index) > 1:
                             print(self.id, " More than 1 index found , please check ")
                     #print(self.id , " left ", [t.txid for t in self.transactions_collected])
-                    print(self.id," transaction left now ,", len(self.transactions_collected))
+                    if self.debug:
+                        print(self.id," transaction left now ,", len(self.transactions_collected))
                     return True
         return False
+    def increase_verified_block(self):
+        if self.blockchain.current_block_height > self.blockchain.confirmed_block_index:
+            self.blockchain.confirmed_block_index += 1
+            self.blockchain.add_utxos(self.blockchain.blockchain[self.blockchain.confirmed_block_index].transactions)
+            self.blockchain.spent_utxos(self.blockchain.blockchain[self.blockchain.confirmed_block_index].transactions)
+            return True
+        else:
+            return False
+
     
