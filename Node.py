@@ -109,7 +109,7 @@ class Node():   ### This node can function as both worker and mining node!!!
             print("Received public key total from ct {} from every node to {}".format(str(ct),str(self.id)))
             
         miner = Miner(self.id,self.N,self.narry,self.proof_of_work_zeros,self.hash_type,self.confirmation_blocks,self.private_key,self.public_keys_of_nodes,self.node_id_of_public_key,self.debug)
-        
+        debug_block_creation_time = True
         if self.id == 0: ## create a genesis block
             inputs = [Input('None','None')]
             outputs = []
@@ -124,7 +124,11 @@ class Node():   ### This node can function as both worker and mining node!!!
                 outputs.append(Output(self.public_keys_of_nodes[i].hex(),amount,self.hash_type))
             coinbase_t = Transaction(self.public_keys_of_nodes[self.id],inputs,outputs,self.private_key,t_type = 'COINBASE',hash_type=self.hash_type)
             miner.blockchain = BlockChain(self.narry,self.proof_of_work_zeros,self.hash_type)
+            if debug_block_creation_time:
+                start_time_block = time.time()
             miner.blockchain.add_genesis_block([coinbase_t])
+            if debug_block_creation_time:
+                print("Time taken in genesis block creation,", time.time()-start_time_block)
             for i in range(1,self.N):
                 if self.debug:
                     print("Sending everyone else the genesis block ", self.id)
@@ -157,6 +161,10 @@ class Node():   ### This node can function as both worker and mining node!!!
         last_block_cor = time.time() 
         last_transaction_time = time.time()
         waited_time = 0
+        debug_size = False
+        debug_multi_transaction = False
+        if debug_size and self.id == 0:
+                print(self.id, " size of block chain ", miner.blockchain.size())
         while not done:
             try:    
                 #print(self.id , "main checking for message")
@@ -173,6 +181,8 @@ class Node():   ### This node can function as both worker and mining node!!!
                     if status:
                         print(self.id, " Received block has been added to blockchain ")
                         last_block_cor = time.time()
+                    else:
+                        print(self.id, " Received block was not added")
                 else:
                     print(self.id, " Received message of type , I dont do what do i do with it", msg.type , msg.src)
                     
@@ -198,30 +208,34 @@ class Node():   ### This node can function as both worker and mining node!!!
                                         unspent_key = key
                                 if unspent_key is None:
                                     print("{} has no money left , so dying".format(str(self.id)))
-
-                                #key = list(self.unspent_btc.keys())[0]
+                                else:
+                                    #key = list(self.unspent_btc.keys())[0]
                                 #print("{} has amount {} btc in selected key".format(str(self.id),str(self.unspent_btc[unspent_key][1])))
-                                inputs = [Input(self.unspent_btc[unspent_key][2],self.unspent_btc[unspent_key][3])]
-                                outputs = [Output(self.public_keys_of_nodes[send_to].hex(),amount,self.hash_type),Output(self.public_keys_of_nodes[self.id].hex(),self.unspent_btc[unspent_key][1]-amount-1,self.hash_type)]
-                                transaction = Transaction(self.public_keys_of_nodes[self.id],inputs,outputs,self.private_key,t_type = 'Regular',hash_type=self.hash_type)
-                                for i in range(0, self.N):
-                                    if i != self.id:
-                                        msg_qs[i].put(Message("Transaction",transaction,self.id,i))
-                                miner.transactions_collected.append(transaction)
-                                self.last_transaction_verified = False
-                                self.last_transaction_key = unspent_key
-                                #del self.unspent_btc[key] #### check for this and
-                                last_transaction_time = time.time()
-                                print("Node {} Sending {} btc to node {} ".format(str(self.id),str(amount),str(send_to)))
-
+                                    if debug_multi_transaction:
+                                        send_to_v = pick_receiver(self.id,self.N)
+                                        inputs = [Input(self.unspent_btc[unspent_key][2],self.unspent_btc[unspent_key][3])]
+                                        outputs = [Output(self.public_keys_of_nodes[send_to].hex(),amount,self.hash_type),Output(self.public_keys_of_nodes[send_to_v].hex(),amount+2,self.hash_type),Output(self.public_keys_of_nodes[self.id].hex(),self.unspent_btc[unspent_key][1]-amount-amount-2-1,self.hash_type)]
+                                        print("Node {} Sending {} btc to node {} and {} btc to node {} ".format(str(self.id),str(amount),str(send_to),str(amount+2),str(send_to_v)))
+                                    else:
+                                        inputs = [Input(self.unspent_btc[unspent_key][2],self.unspent_btc[unspent_key][3])]
+                                        outputs = [Output(self.public_keys_of_nodes[send_to].hex(),amount,self.hash_type),Output(self.public_keys_of_nodes[self.id].hex(),self.unspent_btc[unspent_key][1]-amount-1,self.hash_type)]
+                                    
+                                    transaction = Transaction(self.public_keys_of_nodes[self.id],inputs,outputs,self.private_key,t_type = 'Regular',hash_type=self.hash_type)
+                                    for i in range(0, self.N):
+                                        if i != self.id:
+                                            msg_qs[i].put(Message("Transaction",transaction,self.id,i))
+                                    miner.transactions_collected.append(transaction)
+                                    self.last_transaction_verified = False
+                                    self.last_transaction_key = unspent_key
+                                    #del self.unspent_btc[key] #### check for this and
+                                    last_transaction_time = time.time()
+                                    print("Node {} Sending {} btc to node {} ".format(str(self.id),str(amount),str(send_to)))
+                                    waited_time = 0
 
                     if time.time() - last_block_cor > self.block_creation_time:
                         #last_block_cor= time.time()
                         if coin_toss(1*1.0/self.N):
-                            #print("creating a block and send it everyone,", self.id)
-                            #if self.debug:
                             print(self.id, " Creating a block ", len(miner.transactions_collected))
-                            #print("Have these trans " , self.id,[t.txid for t in miner.transactions_collected])
                             new_block = miner.create_block()
                             if new_block is not None:
                                 #
@@ -249,6 +263,7 @@ class Node():   ### This node can function as both worker and mining node!!!
 
                                 if send_block_to_ee:
                                     #if self.debug:
+                                    waited_time = 0
                                     print(self.id, " No block has been recieved, so send it everyone")
                                     for i in range(0,self.N):
                                         if i != self.id:
@@ -259,8 +274,11 @@ class Node():   ### This node can function as both worker and mining node!!!
                         
 
                         res = miner.increase_verified_block()
+                        #print(self.id, "after adding status",res)
                         last_block_cor = time.time()
                         if res:
+                            if debug_size and self.id == 0:
+                                print(self.id, " size of block chain after adding ", miner.blockchain.size())
                             self.update_unspent_btc_from_block(miner.blockchain.blockchain[miner.blockchain.confirmed_block_index]) ## it will 
                             ## also need to check if last payment by this node is verified
                             self.print_self_balance()

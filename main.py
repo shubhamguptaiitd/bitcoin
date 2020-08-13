@@ -10,8 +10,8 @@ number_of_nodes= int(sys.argv[1])
 narry = int(sys.argv[2])
 prowk = int(sys.argv[3])
 hash_type= sys.argv[4]
-num_msg_limit = 10
-num_confirmation_blocks = int(sys.argv[5])
+num_msg_limit = 2
+num_confirmation_blocks = 2
 qs = []
 if debug:
     print("Opening queues, " , number_of_nodes)

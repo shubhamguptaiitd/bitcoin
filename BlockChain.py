@@ -1,6 +1,6 @@
 from MerkleTree import generate_hash,create_merkle_tree,verify_transaction_given_merkle_tree_and_merkle_root
 import random
-
+import sys
 
 def count_leading_zero_string(string):
     return len(string) - len(string.lstrip('0'))
@@ -12,7 +12,7 @@ class Block():
         self.narry = narry
         self.index = index
         self.pow_number_of_zeros = proof_of_work_zeros
-        self.block_creation_award = 2
+        #self.block_creation_award = 2
         self.hash_type = hash_type
         self.transactions = transactions
         self.transactions_count = len(self.transactions)
@@ -23,6 +23,11 @@ class Block():
         self.compute_proof_of_work()
         #self.award_amount,self.award_txid,self.award_index = self.append_block_creation_award()
         #print("computed")
+    def size(self):
+        size_byte = 0
+        for item in [self.block_type,self.previous_block_hash,self.index,self.pow_number_of_zeros,self.hash_type,self.merkle_tree_root, self.block_hash,self.nounce]:
+            size_byte += sys.getsizeof(item)
+        return size_byte
     def __str__(self):
         rep = "Block: \n"
         for key, value in vars(self).items():
@@ -61,7 +66,14 @@ class BlockChain():
         self.current_block_height = None
         #print("Members of this block chain will need to compute {} proof of work zeros,".format(str(self.proof_of_work_zeros)))
         #self.blockchain.append(self.genesis_block())
-        
+       
+    def size(self):
+        size_byte = 0
+        for item in [self.proof_of_work_zeros,self.narry,self.confirmed_block_index,self.current_block_height]:
+            size_byte += sys.getsizeof(item)
+        for block in self.blockchain:
+            size_byte += block.size()
+        return size_byte
     def __str__(self):
         rep = "BlockChain: [\n"
         for key, value in vars(self).items():
