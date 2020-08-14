@@ -69,6 +69,7 @@ class Node():   ### This node can function as both worker and mining node!!!
                     if self.last_transaction_key is not None:
                         if key == self.last_transaction_key:
                             self.last_transaction_verified = True
+                            print(self.id, "Time taken for transaction verification ",time.time()-self.last_transaction_time)
                             print("{} verified last transaction".format(str(self.id)))
                             self.last_transaction_key = None
                     #print("{} have received  {} awards BTC".format(str(self.id),str(self.btc)))
@@ -79,6 +80,11 @@ class Node():   ### This node can function as both worker and mining node!!!
         for key in self.unspent_btc.keys():
             total_balance += self.unspent_btc[key][1]
         print("{} has balance of {} BTC".format(str(self.id),str(total_balance)))
+    def return_self_balance(self):
+        total_balance = 0
+        for key in self.unspent_btc.keys():
+            total_balance += self.unspent_btc[key][1]
+        return total_balance
     def main(self,msg_qs,outputq):
         
 #         print(self.id, len(self.msg_ct_list))
@@ -162,7 +168,21 @@ class Node():   ### This node can function as both worker and mining node!!!
         last_transaction_time = time.time()
         waited_time = 0
         debug_size = False
+        debug_smt_contract= False
         debug_multi_transaction = False
+        debug_smt_execute_once = False
+        debug_smt_repeat = False
+        smt_contract = False
+        debug_block_creation_time = False
+        debug_block_creation_time_num_of_nodes = False
+        if debug_smt_contract and self.id == 0:
+            debug_smt_execute_once = True
+            smt_contract = True
+
+        if debug_smt_contract and self.id == 1:
+            debug_smt_repeat = True
+            smt_contract = True
+
         if debug_size and self.id == 0:
                 print(self.id, " size of block chain ", miner.blockchain.size())
         while not done:
@@ -176,15 +196,17 @@ class Node():   ### This node can function as both worker and mining node!!!
                         miner.transactions_collected.append(msg.msg) ###check if already exist in blockchain
                         last_transaction_time = time.time()
                 elif msg.type == "Block":
-                    print(self.id , "Block has been received from", msg.src)
+                    if self.debug:
+                        print("Node " ,self.id , "Block has been received from", msg.src)
                     status = miner.add_block(msg.msg)
-                    if status:
-                        print(self.id, " Received block has been added to blockchain ")
+                    
+                    if status :
+                        #print(self.id, " Received block has been added to blockchain ")
                         last_block_cor = time.time()
                     else:
                         print(self.id, " Received block was not added")
                 else:
-                    print(self.id, " Received message of type , I dont do what do i do with it", msg.type , msg.src)
+                    print("Node ",self.id, " Received message of type , I dont do what do i do with it", msg.type , msg.src)
                     
                         
             except Q.Empty:
@@ -196,16 +218,32 @@ class Node():   ### This node can function as both worker and mining node!!!
                     self.print_self_balance()
                     return
                 else:  
-                    if time.time() - last_transaction_time > 20 and self.last_transaction_verified :
-                        if coin_toss(1.0/self.N):
+                    if time.time() - last_transaction_time > 15 and self.last_transaction_verified :
+                        if coin_toss(1.0/self.N) and (not debug_smt_contract or (debug_smt_contract and (self.id in [0,1,3,4]))):
+                         #if True:
                             self.msg_ct_list.append(self.id)
                             if len(self.msg_ct_list) <= self.msg_ct_limit:
                                 send_to = pick_receiver(self.id,self.N)
+                                if debug_smt_contract and self.id == 0:
+                                    send_to = 8
+                                if debug_smt_contract and self.id == 1:
+                                    send_to = 9
                                 amount = random.randint(1,4)
+                                if debug_smt_execute_once and self.return_self_balance() >= 700:
+                                    amount = 100
+                                    debug_smt_execute_once = False
+                                    print("############\nNode ",self.id, " : balance is ", self.return_self_balance() ," so as smart contract of execute once, sending ", amount , "btc to ",send_to ,"\n############")
+                                else:
+                                    if debug_smt_repeat and self.return_self_balance() >= 700:
+                                        amount = 100
+                                        print("############\nNode " ,self.id, " : balance is ", self.return_self_balance() ," so as smart contract of repeat, sending ", amount , "btc to ",send_to,"\n############")
+                                    else:
+                                        amount = random.randint(1,4)
                                 unspent_key = None
                                 for key in self.unspent_btc.keys():
                                     if amount +3 <= self.unspent_btc[key][1]:
                                         unspent_key = key
+                                
                                 if unspent_key is None:
                                     print("{} has no money left , so dying".format(str(self.id)))
                                 else:
@@ -217,6 +255,7 @@ class Node():   ### This node can function as both worker and mining node!!!
                                         outputs = [Output(self.public_keys_of_nodes[send_to].hex(),amount,self.hash_type),Output(self.public_keys_of_nodes[send_to_v].hex(),amount+2,self.hash_type),Output(self.public_keys_of_nodes[self.id].hex(),self.unspent_btc[unspent_key][1]-amount-amount-2-1,self.hash_type)]
                                         print("Node {} Sending {} btc to node {} and {} btc to node {} ".format(str(self.id),str(amount),str(send_to),str(amount+2),str(send_to_v)))
                                     else:
+                                        
                                         inputs = [Input(self.unspent_btc[unspent_key][2],self.unspent_btc[unspent_key][3])]
                                         outputs = [Output(self.public_keys_of_nodes[send_to].hex(),amount,self.hash_type),Output(self.public_keys_of_nodes[self.id].hex(),self.unspent_btc[unspent_key][1]-amount-1,self.hash_type)]
                                     
@@ -228,14 +267,26 @@ class Node():   ### This node can function as both worker and mining node!!!
                                     self.last_transaction_verified = False
                                     self.last_transaction_key = unspent_key
                                     #del self.unspent_btc[key] #### check for this and
-                                    last_transaction_time = time.time()
+                                    self.last_transaction_time = time.time()
                                     print("Node {} Sending {} btc to node {} ".format(str(self.id),str(amount),str(send_to)))
                                     waited_time = 0
 
                     if time.time() - last_block_cor > self.block_creation_time:
                         #last_block_cor= time.time()
                         if coin_toss(1*1.0/self.N):
+                        #if True and self.id == 0:
                             print(self.id, " Creating a block ", len(miner.transactions_collected))
+
+                            if debug_block_creation_time:
+                                print("starting debug block time creatioin")
+                                times = []
+                                for i in range(0,100):
+                                    block_start_time = time.time()
+                                    miner.create_block()
+                                    block_end_time = time.time()
+                                    times.append(block_end_time-block_start_time)
+                                print(self.id," block chain creation times", times)
+                                
                             new_block = miner.create_block()
                             if new_block is not None:
                                 #
@@ -264,10 +315,13 @@ class Node():   ### This node can function as both worker and mining node!!!
                                 if send_block_to_ee:
                                     #if self.debug:
                                     waited_time = 0
+                                    
                                     print(self.id, " No block has been recieved, so send it everyone")
+                                    print(self.id, " size of blockchain containing " , len(new_block.transactions), " and size of ", new_block.size_merkle())
                                     for i in range(0,self.N):
                                         if i != self.id:
-                                            print(self.id, " sending created block to ", i)
+                                            if self.debug:
+                                                print(self.id, " sending created block to ", i)
                                             msg_qs[i].put(Message("Block",new_block,self.id,i))
                                     miner.add_block(new_block)
                                 #last_block_cor = time.time()   

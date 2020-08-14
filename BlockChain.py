@@ -28,6 +28,14 @@ class Block():
         for item in [self.block_type,self.previous_block_hash,self.index,self.pow_number_of_zeros,self.hash_type,self.merkle_tree_root, self.block_hash,self.nounce]:
             size_byte += sys.getsizeof(item)
         return size_byte
+    def size_merkle(self):
+        size_byte = 0
+        for item in [self.block_type,self.previous_block_hash,self.index,self.pow_number_of_zeros,self.hash_type, self.block_hash,self.nounce]:
+            size_byte += sys.getsizeof(item)
+        for row in self.merkle_tree[1:]:
+            for item in row:
+                size_byte += sys.getsizeof(item)
+        return size_byte
     def __str__(self):
         rep = "Block: \n"
         for key, value in vars(self).items():
@@ -73,6 +81,13 @@ class BlockChain():
             size_byte += sys.getsizeof(item)
         for block in self.blockchain:
             size_byte += block.size()
+        return size_byte
+    def size_merkle(self):
+        size_byte = 0
+        for item in [self.proof_of_work_zeros,self.narry,self.confirmed_block_index,self.current_block_height]:
+            size_byte += sys.getsizeof(item)
+        for block in self.blockchain:
+            size_byte += block.size_merkle()
         return size_byte
     def __str__(self):
         rep = "BlockChain: [\n"
