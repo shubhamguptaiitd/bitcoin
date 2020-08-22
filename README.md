@@ -1,4 +1,4 @@
-# Bitcoin - Distributed Payment System with nakatomi consensum to achieve true decentrality
+# Bitcoin - Distributed Payment System with nakatomi consensus to achieve true decentrality
 ## IIT Delhi COL819
 ### Shubham Gupta
 
