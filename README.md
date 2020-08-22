@@ -1,20 +1,18 @@
 # Bitcoin - Distributed Payment System with nakatomi consensum to achieve true decentrality
-## IIT Delhi COL819 Assignment-3
-### Authors - 
-### Shubham Gupta - 2019CSZ8470 - shubham.gupta at cse dot iitd dot ac dot in
+## IIT Delhi COL819
+### Shubham Gupta
 
 System requirement - 
 python3.7 , anaconda contains all the required library
 
 Running Instructions - 
 
-python3 main.py 10 2 4 SHA256 3
+python3 main.py 10 2 4 SHA256 
 
 10 - number of nodes in system <br/>
 2 - narray <br/>
 4 - proof of work zeros <br/>
 SHA256 - hash type <br/>
-3 - min wait block time before confirmation <br/>
 
 
 
